@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/Typography';
@@ -16,59 +22,70 @@ interface QuestCardProps {
 
 const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress }) => {
   const { isDark } = useTheme();
-  
+
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'health': return Colors.xp.health;
-      case 'work': return Colors.xp.work;
-      case 'creativity': return Colors.xp.creativity;
-      case 'social': return Colors.xp.social;
-      case 'learning': return Colors.xp.learning;
-      default: return Colors.xp.base;
+      case 'health':
+        return Colors.xp.health;
+      case 'work':
+        return Colors.xp.work;
+      case 'creativity':
+        return Colors.xp.creativity;
+      case 'social':
+        return Colors.xp.social;
+      case 'learning':
+        return Colors.xp.learning;
+      default:
+        return Colors.xp.base;
     }
   };
-  
+
   const getDifficultyColors = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return [Colors.primary[400], Colors.primary[600]];
-      case 'medium': return [Colors.secondary[400], Colors.secondary[600]];
-      case 'hard': return [Colors.accent[400], Colors.accent[600]];
-      case 'legendary': return [Colors.special.legendary, '#c2410c'];
-      default: return [Colors.primary[400], Colors.primary[600]];
+      case 'easy':
+        return [Colors.primary[400], Colors.primary[600]];
+      case 'medium':
+        return [Colors.secondary[400], Colors.secondary[600]];
+      case 'hard':
+        return [Colors.accent[400], Colors.accent[600]];
+      case 'legendary':
+        return [Colors.special.legendary, '#c2410c'];
+      default:
+        return [Colors.primary[400], Colors.primary[600]];
     }
   };
-  
+
   const getTimeStatus = () => {
     if (!quest.endDate) return null;
-    
+
     const endDate = new Date(quest.endDate);
     const isOverdue = isAfter(new Date(), endDate) && !quest.completed;
-    
+
     if (quest.completed) {
       return {
         label: 'Completed',
         color: Colors.success[500],
-        icon: <Check size={14} color={Colors.success[500]} />
+        icon: <Check size={14} color={Colors.success[500]} />,
       };
     } else if (isOverdue) {
       return {
         label: 'Overdue',
         color: Colors.error[500],
-        icon: <Clock size={14} color={Colors.error[500]} />
+        icon: <Clock size={14} color={Colors.error[500]} />,
       };
     } else {
       return {
         label: `Due ${format(endDate, 'MMM d')}`,
         color: Colors.neutral[500],
-        icon: <Clock size={14} color={Colors.neutral[500]} />
+        icon: <Clock size={14} color={Colors.neutral[500]} />,
       };
     }
   };
-  
+
   const timeStatus = getTimeStatus();
   const categoryColor = getCategoryColor(quest.category);
   const difficultyColors = getDifficultyColors(quest.difficulty);
-  
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -78,7 +95,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress }) => {
           backgroundColor: isDark ? Colors.neutral[900] : Colors.neutral[50],
           opacity: quest.completed ? 0.8 : 1,
         },
-        Elevation.md
+        Elevation.md,
       ]}
     >
       <View style={styles.header}>
@@ -90,85 +107,110 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress }) => {
         >
           <Trophy size={12} color="#fff" />
           <Text style={styles.difficultyText}>
-            {quest.difficulty.charAt(0).toUpperCase() + quest.difficulty.slice(1)}
+            {quest.difficulty.charAt(0).toUpperCase() +
+              quest.difficulty.slice(1)}
           </Text>
         </LinearGradient>
-        
-        <View style={[styles.categoryTag, { backgroundColor: `${categoryColor}30` }]}>
+
+        <View
+          style={[
+            styles.categoryTag,
+            { backgroundColor: `${categoryColor}30` },
+          ]}
+        >
           <Text style={[styles.categoryText, { color: categoryColor }]}>
             {quest.category}
           </Text>
         </View>
       </View>
-      
-      <Text style={[
-        Typography.h4,
-        { 
-          color: isDark ? Colors.text.dark.primary : Colors.text.light.primary,
-          marginBottom: Spacing.xs,
-        }
-      ]}>
+
+      <Text
+        style={[
+          Typography.h4,
+          {
+            color: isDark
+              ? Colors.text.dark.primary
+              : Colors.text.light.primary,
+            marginBottom: Spacing.xs,
+          },
+        ]}
+      >
         {quest.title}
       </Text>
-      
-      <Text style={[
-        Typography.body2,
-        { 
-          color: isDark ? Colors.text.dark.secondary : Colors.text.light.secondary,
-          marginBottom: Spacing.md,
-        }
-      ]}
-      numberOfLines={2}
+
+      <Text
+        style={[
+          Typography.body2,
+          {
+            color: isDark
+              ? Colors.text.dark.secondary
+              : Colors.text.light.secondary,
+            marginBottom: Spacing.md,
+          },
+        ]}
+        numberOfLines={2}
       >
         {quest.description}
       </Text>
-      
+
       <View style={styles.progressContainer}>
         <View style={styles.progressBarBackground}>
-          <View 
+          <View
             style={[
               styles.progressBar,
               {
                 width: `${quest.progress}%`,
-                backgroundColor: quest.completed ? Colors.success[500] : difficultyColors[0]
-              }
+                backgroundColor: quest.completed
+                  ? Colors.success[500]
+                  : difficultyColors[0],
+              },
             ]}
           />
         </View>
-        <Text style={[
-          Typography.caption,
-          { color: isDark ? Colors.text.dark.tertiary : Colors.text.light.tertiary }
-        ]}>
+        <Text
+          style={[
+            Typography.caption,
+            {
+              color: isDark
+                ? Colors.text.dark.tertiary
+                : Colors.text.light.tertiary,
+            },
+          ]}
+        >
           {quest.progress}% Complete
         </Text>
       </View>
-      
+
       <View style={styles.footer}>
         <View style={styles.stepsInfo}>
-          <Text style={[
-            Typography.caption,
-            { color: isDark ? Colors.text.dark.tertiary : Colors.text.light.tertiary }
-          ]}>
-            {quest.steps.filter(step => step.completed).length}/{quest.steps.length} steps
+          <Text
+            style={[
+              Typography.caption,
+              {
+                color: isDark
+                  ? Colors.text.dark.tertiary
+                  : Colors.text.light.tertiary,
+              },
+            ]}
+          >
+            {quest.steps.filter((step) => step.completed).length}/
+            {quest.steps.length} steps
           </Text>
         </View>
-        
+
         <View style={styles.questMeta}>
           {timeStatus && (
             <View style={styles.timeStatus}>
               {timeStatus.icon}
-              <Text style={[
-                styles.timeStatusText,
-                { color: timeStatus.color }
-              ]}>
+              <Text
+                style={[styles.timeStatusText, { color: timeStatus.color }]}
+              >
                 {timeStatus.label}
               </Text>
             </View>
           )}
-          
-          <Text style={styles.xpReward}>
-            +{quest.xpReward} XP
-          </Text>
+
+          <Text style={styles.xpReward}>+{quest.xpReward} XP</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -177,14 +219,14 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.md,
+    padding: Platform.OS === 'web' ? Spacing.lg : Spacing.md,
     borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
+    marginBottom: Platform.OS === 'web' ? Spacing.lg : Spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+    marginBottom: Platform.OS === 'web' ? Spacing.md : Spacing.sm,
   },
   difficultyBadge: {
     flexDirection: 'row',
@@ -209,7 +251,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   progressContainer: {
-    marginBottom: Spacing.sm,
+    marginBottom: Platform.OS === 'web' ? Spacing.md : Spacing.sm,
+    marginTop: Platform.OS === 'web' ? Spacing.md : 0,
   },
   progressBarBackground: {
     height: 8,
@@ -226,6 +269,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: Platform.OS === 'web' ? Spacing.md : Spacing.sm,
   },
   stepsInfo: {
     flexDirection: 'row',
@@ -249,6 +293,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PixelifySans',
     fontSize: 12,
     color: Colors.primary[600],
+    marginLeft: Platform.OS === 'web' ? 12 : 6,
   },
 });
 

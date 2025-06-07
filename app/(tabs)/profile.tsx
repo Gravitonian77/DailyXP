@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   View,
   Text,
@@ -6,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
@@ -24,12 +26,19 @@ import {
   Award,
   Palette,
   LogOut,
+  RotateCcw,
+  Trash2,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { useNavigation } from '@react-navigation/native';
+import { ACHIEVEMENTS } from '@/constants/achievements';
 
 export default function ProfileScreen() {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const { user, resetProgress } = useUser();
+  const { logout } = useAuth();
 
   const renderMenuItem = (
     icon: React.ReactNode,
@@ -83,12 +92,84 @@ export default function ProfileScreen() {
   // Calculate the progress percentage for the level
   const levelProgress = (user.currentXP / user.xpToNextLevel) * 100;
 
+  const handleDeleteProfile = async () => {
+    console.log('1. Delete profile button clicked');
+
+    // Test if Alert is working at all
+    try {
+      console.log('2. Attempting to show alert...');
+      // Use a simpler Alert implementation
+      if (Platform.OS === 'web') {
+        if (window.confirm('Are you sure you want to delete your profile?')) {
+          console.log('3. Delete confirmed on web');
+          // Handle deletion
+          try {
+            const {
+              data: { user: authUser },
+            } = await supabase.auth.getUser();
+            if (authUser) {
+              await supabase.from('profiles').delete().eq('id', authUser.id);
+              await supabase.auth.signOut();
+              resetProgress();
+              logout();
+              router.replace('/auth/signup');
+            }
+          } catch (error) {
+            console.error('Error during deletion:', error);
+          }
+        } else {
+          console.log('3. Delete cancelled on web');
+        }
+      } else {
+        // For mobile platforms
+        Alert.alert(
+          'Delete Profile',
+          'Are you sure you want to delete your profile?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => console.log('3. Delete cancelled on mobile'),
+            },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                console.log('4. Delete confirmed on mobile');
+                try {
+                  const {
+                    data: { user: authUser },
+                  } = await supabase.auth.getUser();
+                  if (authUser) {
+                    await supabase
+                      .from('profiles')
+                      .delete()
+                      .eq('id', authUser.id);
+                    await supabase.auth.signOut();
+                    resetProgress();
+                    logout();
+                    router.replace('/auth/signup');
+                  }
+                } catch (error) {
+                  console.error('Error during deletion:', error);
+                }
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error showing alert:', error);
+    }
+  };
+
   return (
-    <View
+    <SafeAreaView
       style={[
         styles.container,
         { backgroundColor: isDark ? Colors.neutral[950] : Colors.neutral[50] },
       ]}
+      edges={['top']}
     >
       <LinearGradient
         colors={[Colors.primary[600], Colors.primary[800]]}
@@ -182,7 +263,7 @@ export default function ProfileScreen() {
               <Palette size={24} color={Colors.accent[500]} />,
               'Avatar Customization',
               "Change your character's appearance",
-              () => router.push('/avatar')
+              () => router.push('/(tabs)/avatar')
             )}
 
             {renderMenuItem(
@@ -216,22 +297,92 @@ export default function ProfileScreen() {
               <Award size={24} color={Colors.secondary[500]} />,
               'Badges',
               `${user.badges?.length || 0} badges earned`,
-              () => alert('Badges coming soon!')
+              () => router.push('/badges')
             )}
 
             {renderMenuItem(
               <Shirt size={24} color={Colors.secondary[500]} />,
               'Equipment',
               `${user.equipment?.length || 0} items unlocked`,
-              () => alert('Equipment coming soon!')
+              () => router.push('/equipment')
             )}
 
             {renderMenuItem(
               <Shield size={24} color={Colors.secondary[500]} />,
               'Class Specialization',
-              user.class || 'No class selected',
-              () => alert('Class selection coming soon!')
+              user.class?.name || 'No class selected',
+              () => router.push('/class-select')
             )}
+          </View>
+
+          <View style={styles.achievementsSection}>
+            <Text
+              style={[
+                Typography.overline,
+                styles.menuSectionTitle,
+                {
+                  color: isDark
+                    ? Colors.text.dark.tertiary
+                    : Colors.text.light.tertiary,
+                },
+              ]}
+            >
+              ACHIEVEMENTS
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginVertical: 8 }}
+            >
+              {ACHIEVEMENTS.map((ach) => {
+                const unlocked = user.achievements?.some(
+                  (a) => a.id === ach.id && a.unlocked
+                );
+                return (
+                  <View
+                    key={ach.id}
+                    style={[
+                      styles.achievementCard,
+                      {
+                        backgroundColor: isDark
+                          ? Colors.neutral[800]
+                          : Colors.neutral[200],
+                      },
+                      unlocked && [
+                        styles.achievementUnlocked,
+                        {
+                          backgroundColor: isDark
+                            ? Colors.neutral[700]
+                            : Colors.neutral[300],
+                        },
+                      ],
+                    ]}
+                  >
+                    <Text style={styles.achievementIcon}>{ach.icon}</Text>
+                    <Text
+                      style={[Typography.subtitle2, styles.achievementName]}
+                    >
+                      {ach.name}
+                    </Text>
+                    <Text style={[Typography.caption, styles.achievementDesc]}>
+                      {ach.description}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.achievementStatus,
+                        {
+                          color: unlocked
+                            ? Colors.success[500]
+                            : Colors.text.light.tertiary,
+                        },
+                      ]}
+                    >
+                      {unlocked ? 'Unlocked' : 'Locked'}
+                    </Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
           </View>
 
           <View style={styles.menuSection}>
@@ -250,16 +401,58 @@ export default function ProfileScreen() {
             </Text>
 
             {renderMenuItem(
-              <LogOut size={24} color={Colors.error[500]} />,
+              <RotateCcw size={24} color={Colors.warning[500]} />,
               'Reset Progress',
               'Clear all data and start over',
               () => {
-                if (
-                  confirm(
-                    'Are you sure you want to reset all progress? This cannot be undone.'
-                  )
-                ) {
-                  resetProgress();
+                if (Platform.OS === 'web') {
+                  if (
+                    window.confirm(
+                      'Are you sure you want to reset all progress? This cannot be undone.'
+                    )
+                  ) {
+                    resetProgress();
+                  }
+                } else {
+                  Alert.alert(
+                    'Reset Progress',
+                    'Are you sure you want to reset all progress? This cannot be undone.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'OK', onPress: resetProgress },
+                    ],
+                    { cancelable: true }
+                  );
+                }
+              }
+            )}
+
+            {renderMenuItem(
+              <Trash2 size={24} color={Colors.error[700]} />,
+              'Delete Profile',
+              'Permanently delete your account',
+              handleDeleteProfile
+            )}
+
+            {renderMenuItem(
+              <LogOut size={24} color={Colors.error[700]} />,
+              'Log Out',
+              'Sign out of your account',
+              () => {
+                if (Platform.OS === 'web') {
+                  if (window.confirm('Are you sure you want to log out?')) {
+                    logout();
+                  }
+                } else {
+                  Alert.alert(
+                    'Log Out',
+                    'Are you sure you want to log out?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'OK', onPress: logout },
+                    ],
+                    { cancelable: true }
+                  );
                 }
               }
             )}
@@ -281,7 +474,7 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -290,8 +483,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.xl,
   },
   headerControls: {
@@ -428,5 +620,32 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: 'center',
     marginBottom: Spacing.xl,
+  },
+  achievementsSection: {
+    padding: Spacing.md,
+  },
+  achievementCard: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginRight: Spacing.md,
+  },
+  achievementUnlocked: {
+    // Only static styles here
+  },
+  achievementIcon: {
+    fontSize: 24,
+    marginBottom: Spacing.sm,
+  },
+  achievementName: {
+    fontFamily: 'PixelifySans-Bold',
+    marginBottom: Spacing.sm,
+  },
+  achievementDesc: {
+    fontFamily: 'Inter',
+  },
+  achievementStatus: {
+    fontFamily: 'Inter',
+    fontSize: 12,
+    marginTop: Spacing.sm,
   },
 });

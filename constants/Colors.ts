@@ -142,6 +142,21 @@ export const Colors = {
     uncommon: '#22c55e', // Green for uncommon items/tasks
     common: '#9ca3af', // Gray for common items/tasks
   },
+  
+  // Info color (blue)
+  info: {
+    50: '#eff6ff',
+    100: '#dbeafe',
+    200: '#bfdbfe',
+    300: '#93c5fd',
+    400: '#60a5fa',
+    500: '#3b82f6', // Main info
+    600: '#2563eb',
+    700: '#1d4ed8',
+    800: '#1e40af',
+    900: '#1e3a8a',
+    950: '#172554',
+  },
 };
 
 export const getContrastColor = (hexColor: string): string => {

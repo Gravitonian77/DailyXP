@@ -70,13 +70,14 @@ export default function HomeScreen() {
   };
 
   return (
-    <View
+    <SafeAreaView
       style={[
         styles.container,
         {
           backgroundColor: isDark ? Colors.neutral[950] : Colors.neutral[50],
         },
       ]}
+      edges={['top']}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -380,7 +381,7 @@ export default function HomeScreen() {
           )}
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

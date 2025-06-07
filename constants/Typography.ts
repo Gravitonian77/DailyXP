@@ -28,6 +28,10 @@ export const FontWeight = {
   medium: '500',
   semibold: '600',
   bold: '700',
+  rn_normal: 400,
+  rn_medium: 500,
+  rn_semibold: 600,
+  rn_bold: 700,
 };
 
 export const LineHeight = {
@@ -42,80 +46,67 @@ export const Typography = {
   h1: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize['3xl'],
-    fontWeight: FontWeight.bold,
     lineHeight: LineHeight.tight,
   },
   h2: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize['2xl'],
-    fontWeight: FontWeight.bold,
     lineHeight: LineHeight.tight,
   },
   h3: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
     lineHeight: LineHeight.tight,
   },
   h4: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
     lineHeight: LineHeight.normal,
   },
   h5: {
     fontFamily: FontFamily.heading,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    lineHeight: LineHeight.tight,
+    fontSize: FontSize.base,
+    lineHeight: LineHeight.normal,
   },
   h6: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize.base,
-    fontWeight: FontWeight.semibold,
     lineHeight: LineHeight.tight,
   },
   body1: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.md,
-    fontWeight: FontWeight.normal,
     lineHeight: LineHeight.normal,
   },
   body2: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.base,
-    fontWeight: FontWeight.normal,
     lineHeight: LineHeight.normal,
   },
   subtitle1: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.base,
-    fontWeight: FontWeight.medium,
     lineHeight: LineHeight.normal,
   },
   subtitle2: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
     lineHeight: LineHeight.normal,
   },
   caption: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.normal,
     lineHeight: LineHeight.normal,
   },
   button: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize.base,
-    fontWeight: FontWeight.semibold,
     lineHeight: LineHeight.none,
     textTransform: 'uppercase' as const,
   },
   overline: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
     lineHeight: LineHeight.none,
     textTransform: 'uppercase' as const,
     letterSpacing: 1,

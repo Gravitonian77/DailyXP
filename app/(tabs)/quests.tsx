@@ -1,5 +1,13 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Platform,
+} from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/Typography';
@@ -12,40 +20,48 @@ import { LinearGradient } from 'expo-linear-gradient';
 import NewQuestModal from '@/components/quests/NewQuestModal';
 import { router } from 'expo-router';
 import { Quest } from '@/types/Quest';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default function QuestsScreen() {
   const { theme, isDark } = useTheme();
   const { quests, addQuest } = useQuests();
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   // Filter active and completed quests
-  const activeQuests = quests.filter(quest => !quest.completed);
-  const completedQuests = quests.filter(quest => quest.completed);
-  
+  const activeQuests = quests.filter((quest) => !quest.completed);
+  const completedQuests = quests.filter((quest) => quest.completed);
+
   const handleQuestPress = (quest: Quest) => {
     router.push(`/quests/${quest.id}`);
   };
-  
+
   const renderQuestList = (questsToRender: Quest[], title: string) => (
     <>
       {questsToRender.length > 0 && (
         <View>
-          <Text style={[
-            Typography.h4, 
-            styles.sectionTitle,
-            { color: isDark ? Colors.text.dark.primary : Colors.text.light.primary }
-          ]}>
+          <Text
+            style={[
+              Typography.h4,
+              styles.sectionTitle,
+              {
+                color: isDark
+                  ? Colors.text.dark.primary
+                  : Colors.text.light.primary,
+              },
+            ]}
+          >
             {title}
           </Text>
-          
+
           {questsToRender.map((quest, index) => (
-            <Animated.View 
+            <Animated.View
               key={quest.id}
               entering={FadeInRight.delay(index * 100).duration(400)}
               layout={Layout.springify()}
             >
-              <QuestCard 
-                quest={quest} 
+              <QuestCard
+                quest={quest}
                 onPress={() => handleQuestPress(quest)}
               />
             </Animated.View>
@@ -54,29 +70,30 @@ export default function QuestsScreen() {
       )}
     </>
   );
-  
+
   return (
-    <View style={[
-      styles.container, 
-      { backgroundColor: isDark ? Colors.neutral[950] : Colors.neutral[50] }
-    ]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? Colors.neutral[950] : Colors.neutral[50] },
+      ]}
+      edges={['top']}
+    >
       <LinearGradient
         colors={[Colors.secondary[700], Colors.secondary[900]]}
         style={styles.header}
       >
-        <Animated.View 
+        <Animated.View
           entering={FadeIn.delay(100).duration(400)}
           style={styles.headerContent}
         >
           <View>
-            <Text style={[Typography.h2, styles.headerTitle]}>
-              Your Quests
-            </Text>
+            <Text style={[Typography.h2, styles.headerTitle]}>Your Quests</Text>
             <Text style={styles.headerSubtitle}>
               Complete quests to earn XP and rewards
             </Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.addButton}
             onPress={() => setModalVisible(true)}
           >
@@ -84,40 +101,56 @@ export default function QuestsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
-      
-      <Animated.View 
+
+      <Animated.View
         entering={FadeIn.delay(300).duration(400)}
         style={styles.questsList}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {activeQuests.length === 0 && completedQuests.length === 0 ? (
             <View style={styles.emptyState}>
-              <Image 
-                source={{ uri: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg' }}
+              <Image
+                source={{
+                  uri: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
+                }}
                 style={styles.emptyImage}
               />
-              <Text style={[
-                Typography.h3, 
-                { color: isDark ? Colors.text.dark.primary : Colors.text.light.primary, marginTop: Spacing.md }
-              ]}>
+              <Text
+                style={[
+                  Typography.h3,
+                  {
+                    color: isDark
+                      ? Colors.text.dark.primary
+                      : Colors.text.light.primary,
+                    marginTop: Spacing.md,
+                  },
+                ]}
+              >
                 No Quests Yet
               </Text>
-              <Text style={[
-                Typography.body1, 
-                { 
-                  color: isDark ? Colors.text.dark.secondary : Colors.text.light.secondary,
-                  textAlign: 'center',
-                  marginTop: Spacing.sm,
-                  marginBottom: Spacing.md,
-                }
-              ]}>
+              <Text
+                style={[
+                  Typography.body1,
+                  {
+                    color: isDark
+                      ? Colors.text.dark.secondary
+                      : Colors.text.light.secondary,
+                    textAlign: 'center',
+                    marginTop: Spacing.sm,
+                    marginBottom: Spacing.md,
+                  },
+                ]}
+              >
                 Start your first quest to earn XP and level up your character.
               </Text>
-              <TouchableOpacity 
-                style={[styles.startButton, { backgroundColor: Colors.secondary[600] }]}
+              <TouchableOpacity
+                style={[
+                  styles.startButton,
+                  { backgroundColor: Colors.secondary[600] },
+                ]}
                 onPress={() => setModalVisible(true)}
               >
                 <Text style={styles.startButtonText}>Start a Quest</Text>
@@ -126,17 +159,17 @@ export default function QuestsScreen() {
           ) : (
             <>
               {renderQuestList(activeQuests, 'Active Quests')}
-              
+
               {completedQuests.length > 0 && (
                 <View style={styles.sectionDivider} />
               )}
-              
+
               {renderQuestList(completedQuests, 'Completed Quests')}
             </>
           )}
         </ScrollView>
       </Animated.View>
-      
+
       <NewQuestModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -145,18 +178,16 @@ export default function QuestsScreen() {
           setModalVisible(false);
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
-
-import { ScrollView } from 'react-native-gesture-handler';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Spacing.md,
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xl,
   },
@@ -164,15 +195,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: Platform.OS === 'web' ? 32 : 16,
   },
   headerTitle: {
     color: '#fff',
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   headerSubtitle: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontFamily: 'Inter',
     fontSize: 14,
+    marginBottom: Platform.OS === 'web' ? 16 : 8,
   },
   addButton: {
     width: 44,
@@ -190,36 +223,35 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   scrollContent: {
-    padding: Spacing.md,
-    paddingBottom: 80,
+    padding: Platform.OS === 'web' ? Spacing.xl : Spacing.md,
+    paddingBottom: Platform.OS === 'web' ? 120 : 80,
   },
   sectionTitle: {
-    marginBottom: Spacing.sm,
+    marginBottom: Platform.OS === 'web' ? Spacing.md : Spacing.sm,
+    marginTop: Platform.OS === 'web' ? Spacing.xl : Spacing.md,
   },
   sectionDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(124, 58, 237, 0.2)',
-    marginVertical: Spacing.md,
+    backgroundColor: Colors.neutral[700],
+    marginVertical: Platform.OS === 'web' ? Spacing.lg : Spacing.md,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.xxl,
-    padding: Spacing.md,
+    marginTop: 60,
+    marginBottom: 40,
   },
   emptyImage: {
-    width: 120,
+    width: 180,
     height: 120,
-    borderRadius: 60,
-    opacity: 0.8,
+    borderRadius: 16,
+    marginBottom: 24,
   },
   startButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Elevation.sm,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginTop: 16,
   },
   startButtonText: {
     color: '#fff',
