@@ -60,7 +60,7 @@ const defaultAttributes = {
 };
 
 export default function StatsScreen() {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { user } = useUser();
   const { tasks } = useTasks();
   const { quests } = useQuests();
