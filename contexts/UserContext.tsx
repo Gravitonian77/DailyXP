@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Achievement, Badge, EquipmentItem, UserClass } from '@/types/user';
 import { ACHIEVEMENTS, BADGES, EQUIPMENT } from '@/constants/achievements';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface User {
   name: string;
@@ -193,7 +194,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         newUser.lastActive = today;
-        setUser(newUser);
+        updateUser(newUser);
         await secureStore.setItem('dailyxp_user', JSON.stringify(newUser));
       }
     };
@@ -213,6 +214,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
     saveUserData();
   }, [user]);
+
+  const { showNotification } = useNotification();
 
   const addXP = (amount: number, category: TaskCategory) => {
     setUser((prevUser) => {
@@ -235,7 +238,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         newAttributes[attrKey] = (newAttributes[attrKey] || 0) + attrGain;
       }
 
-      return {
+      const updatedUser = {
         ...prevUser,
         currentXP: newCurrentXP,
         level: newLevel,
@@ -246,12 +249,34 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
           [category]: prevUser.categoryXP[category] + amount,
         },
         attributes: newAttributes,
-      };
+      } as User;
+
+      const { newBadges } = evaluateBadges(updatedUser);
+      if (newBadges.length) {
+        updatedUser.badges = [...(prevUser.badges || []), ...newBadges];
+        newBadges.forEach((b) =>
+          showNotification(`New Badge Unlocked: ${b.name}!`, 'success')
+        );
+      }
+
+      return updatedUser;
     });
   };
 
   const updateUser = (updates: Partial<User>) => {
-    setUser((prevUser) => ({ ...prevUser, ...updates }));
+    setUser((prevUser) => {
+      const updatedUser = { ...prevUser, ...updates } as User;
+
+      const { newBadges } = evaluateBadges(updatedUser);
+      if (newBadges.length) {
+        updatedUser.badges = [...(prevUser.badges || []), ...newBadges];
+        newBadges.forEach((b) =>
+          showNotification(`New Badge Unlocked: ${b.name}!`, 'success')
+        );
+      }
+
+      return updatedUser;
+    });
   };
 
   const resetProgress = () => {
