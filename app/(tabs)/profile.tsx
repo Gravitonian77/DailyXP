@@ -263,7 +263,7 @@ export default function ProfileScreen() {
               <Palette size={24} color={Colors.accent[500]} />,
               'Avatar Customization',
               "Change your character's appearance",
-              () => router.push('/(tabs)/avatar')
+              () => router.push('/avatar')
             )}
 
             {renderMenuItem(
@@ -310,79 +310,13 @@ export default function ProfileScreen() {
             {renderMenuItem(
               <Shield size={24} color={Colors.secondary[500]} />,
               'Class Specialization',
-              user.class?.name || 'No class selected',
+              typeof user.class === 'object' &&
+                user.class !== null &&
+                'name' in user.class
+                ? user.class.name
+                : user.class || 'No class selected',
               () => router.push('/class-select')
             )}
-          </View>
-
-          <View style={styles.achievementsSection}>
-            <Text
-              style={[
-                Typography.overline,
-                styles.menuSectionTitle,
-                {
-                  color: isDark
-                    ? Colors.text.dark.tertiary
-                    : Colors.text.light.tertiary,
-                },
-              ]}
-            >
-              ACHIEVEMENTS
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginVertical: 8 }}
-            >
-              {ACHIEVEMENTS.map((ach) => {
-                const unlocked = user.achievements?.some(
-                  (a) => a.id === ach.id && a.unlocked
-                );
-                return (
-                  <View
-                    key={ach.id}
-                    style={[
-                      styles.achievementCard,
-                      {
-                        backgroundColor: isDark
-                          ? Colors.neutral[800]
-                          : Colors.neutral[200],
-                      },
-                      unlocked && [
-                        styles.achievementUnlocked,
-                        {
-                          backgroundColor: isDark
-                            ? Colors.neutral[700]
-                            : Colors.neutral[300],
-                        },
-                      ],
-                    ]}
-                  >
-                    <Text style={styles.achievementIcon}>{ach.icon}</Text>
-                    <Text
-                      style={[Typography.subtitle2, styles.achievementName]}
-                    >
-                      {ach.name}
-                    </Text>
-                    <Text style={[Typography.caption, styles.achievementDesc]}>
-                      {ach.description}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.achievementStatus,
-                        {
-                          color: unlocked
-                            ? Colors.success[500]
-                            : Colors.text.light.tertiary,
-                        },
-                      ]}
-                    >
-                      {unlocked ? 'Unlocked' : 'Locked'}
-                    </Text>
-                  </View>
-                );
-              })}
-            </ScrollView>
           </View>
 
           <View style={styles.menuSection}>
@@ -441,7 +375,10 @@ export default function ProfileScreen() {
               () => {
                 if (Platform.OS === 'web') {
                   if (window.confirm('Are you sure you want to log out?')) {
-                    logout();
+                    (async () => {
+                      await logout();
+                      router.replace('/auth/login');
+                    })();
                   }
                 } else {
                   Alert.alert(
@@ -449,7 +386,13 @@ export default function ProfileScreen() {
                     'Are you sure you want to log out?',
                     [
                       { text: 'Cancel', style: 'cancel' },
-                      { text: 'OK', onPress: logout },
+                      {
+                        text: 'OK',
+                        onPress: async () => {
+                          await logout();
+                          router.replace('/auth/login');
+                        },
+                      },
                     ],
                     { cancelable: true }
                   );
@@ -620,32 +563,5 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     alignItems: 'center',
     marginBottom: Spacing.xl,
-  },
-  achievementsSection: {
-    padding: Spacing.md,
-  },
-  achievementCard: {
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginRight: Spacing.md,
-  },
-  achievementUnlocked: {
-    // Only static styles here
-  },
-  achievementIcon: {
-    fontSize: 24,
-    marginBottom: Spacing.sm,
-  },
-  achievementName: {
-    fontFamily: 'PixelifySans-Bold',
-    marginBottom: Spacing.sm,
-  },
-  achievementDesc: {
-    fontFamily: 'Inter',
-  },
-  achievementStatus: {
-    fontFamily: 'Inter',
-    fontSize: 12,
-    marginTop: Spacing.sm,
   },
 });

@@ -273,38 +273,22 @@ export const useUser = () => {
   return context;
 };
 
-// Add a central evaluation function
-function evaluateAchievements(user: User) {
-  const newAchievements: Achievement[] = [];
+// Replace the evaluateAchievements function with:
+function evaluateBadges(user: User) {
   const newBadges: Badge[] = [];
-  const newEquipment: EquipmentItem[] = [];
-  for (const ach of ACHIEVEMENTS) {
+  for (const badge of BADGES as Badge[]) {
+    const hasCondition = typeof (badge as any).condition === 'function';
     if (
-      !user.achievements.some((a) => a.id === ach.id && a.unlocked) &&
-      ach.condition(user)
-    ) {
-      newAchievements.push({ ...ach, unlocked: true, unlockedAt: new Date() });
-    }
-  }
-  for (const badge of BADGES) {
-    if (
-      !user.badges.some((b) => b.id === badge.id) &&
-      badge.condition &&
-      badge.condition(user)
+      !(user.badges ?? []).some((b: any) =>
+        b.id ? b.id === badge.id : b === badge.id
+      ) &&
+      hasCondition &&
+      (badge as any).condition(user)
     ) {
       newBadges.push({ ...badge, unlockedAt: new Date() });
     }
   }
-  for (const eq of EQUIPMENT) {
-    if (
-      !user.equipment.some((e) => e.id === eq.id) &&
-      eq.condition &&
-      eq.condition(user)
-    ) {
-      newEquipment.push({ ...eq });
-    }
-  }
-  return { newAchievements, newBadges, newEquipment };
+  return { newBadges };
 }
 
-// Call evaluateAchievements after XP, attribute, streak, or task updates and update user state accordingly.
+// Call evaluateBadges after XP, attribute, streak, or task updates and update user state accordingly.

@@ -10,6 +10,14 @@ import { useUser } from '@/contexts/UserContext';
 import { Typography } from '@/constants/Typography';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ChevronLeft } from 'lucide-react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { Dimensions } from 'react-native';
 
 const CLASSES = [
   {
@@ -49,82 +57,190 @@ const CLASSES = [
   },
 ];
 
+const CARD_MARGIN = 8;
+const CARD_GAP = 16;
+const NUM_COLUMNS = 2;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CARD_WIDTH = Math.floor(
+  (SCREEN_WIDTH - CARD_GAP * (NUM_COLUMNS + 1)) / NUM_COLUMNS
+);
+
 export default function ClassSelectScreen() {
   const { user, updateUser } = useUser();
+  const { isDark } = useTheme();
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
   const handleSelect = (cls: any) => {
     updateUser({ class: cls });
     router.back();
   };
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backText}>{'< Back'}</Text>
-      </TouchableOpacity>
-      <Text style={styles.title}>Choose Your Class</Text>
-      <ScrollView contentContainerStyle={styles.grid}>
-        {CLASSES.map((cls) => (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? Colors.neutral[950] : Colors.neutral[50] },
+      ]}
+    >
+      <View style={styles.headerRow}>
+        <Animated.View style={animatedStyle}>
           <TouchableOpacity
-            key={cls.id}
-            style={[
-              styles.classCard,
-              user.class?.id === cls.id && styles.selected,
-            ]}
-            onPress={() => handleSelect(cls)}
+            onPress={() => router.back()}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPressIn={() => (scale.value = withSpring(0.92))}
+            onPressOut={() => (scale.value = withSpring(1))}
           >
-            <Text style={styles.classIcon}>{cls.icon}</Text>
-            <Text style={styles.className}>{cls.name}</Text>
-            <Text style={styles.classDesc}>{cls.description}</Text>
-            <Text style={styles.classBonus}>{cls.passiveBonus}</Text>
-            {user.class?.id === cls.id && (
-              <Text style={styles.selectedText}>Selected</Text>
-            )}
+            <ChevronLeft
+              size={28}
+              color={isDark ? Colors.primary[300] : Colors.primary[600]}
+            />
           </TouchableOpacity>
-        ))}
+        </Animated.View>
+        <Text
+          style={[
+            styles.title,
+            {
+              color: isDark
+                ? Colors.text.dark.primary
+                : Colors.text.light.primary,
+            },
+          ]}
+        >
+          Choose Your Class
+        </Text>
+      </View>
+      <ScrollView
+        contentContainerStyle={{
+          ...styles.grid,
+          paddingBottom: 80,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {CLASSES.map((cls) => {
+          const selected =
+            typeof user.class === 'string'
+              ? user.class === cls.id
+              : (user.class as any)?.id === cls.id;
+          return (
+            <TouchableOpacity
+              key={cls.id}
+              style={[
+                styles.classCard,
+                {
+                  width: CARD_WIDTH,
+                  backgroundColor: selected
+                    ? isDark
+                      ? Colors.primary[900]
+                      : Colors.primary[50]
+                    : isDark
+                    ? Colors.neutral[900]
+                    : Colors.neutral[100],
+                  borderColor: selected ? Colors.primary[500] : 'transparent',
+                  shadowColor: isDark ? '#000' : '#aaa',
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 3,
+                },
+              ]}
+              activeOpacity={0.85}
+              onPress={() => handleSelect(cls)}
+            >
+              <Text
+                style={[styles.classIcon, { opacity: selected ? 1 : 0.85 }]}
+              >
+                {cls.icon}
+              </Text>
+              <Text
+                style={[
+                  styles.className,
+                  {
+                    color: isDark
+                      ? Colors.text.dark.primary
+                      : Colors.text.light.primary,
+                  },
+                ]}
+              >
+                {cls.name}
+              </Text>
+              <Text
+                style={[
+                  styles.classDesc,
+                  {
+                    color: isDark
+                      ? Colors.text.dark.tertiary
+                      : Colors.text.light.tertiary,
+                  },
+                ]}
+              >
+                {cls.description}
+              </Text>
+              <Text
+                style={[
+                  styles.classBonus,
+                  { color: isDark ? Colors.success[400] : Colors.success[700] },
+                ]}
+              >
+                {cls.passiveBonus}
+              </Text>
+              {selected && (
+                <Text
+                  style={[styles.selectedText, { color: Colors.primary[400] }]}
+                >
+                  Selected
+                </Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.neutral[50], padding: 16 },
-  backButton: { marginBottom: 12 },
-  backText: { color: Colors.primary[600], fontSize: 16 },
-  title: { ...Typography.h2, marginBottom: 16 },
+  container: { flex: 1, padding: 16 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButton: {
+    marginRight: 8,
+    borderRadius: 999,
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: { ...Typography.h2, flex: 1, textAlign: 'left', marginBottom: 0 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    justifyContent: 'flex-start',
+    gap: CARD_GAP,
+    justifyContent: 'center',
   },
   classCard: {
-    width: 160,
     alignItems: 'center',
-    backgroundColor: Colors.neutral[100],
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: CARD_GAP,
     borderWidth: 2,
-    borderColor: 'transparent',
+    marginHorizontal: CARD_MARGIN,
   },
-  selected: {
-    borderColor: Colors.primary[500],
-    backgroundColor: Colors.primary[50],
-  },
-  classIcon: { fontSize: 36, marginBottom: 8 },
+  classIcon: { fontSize: 40, marginBottom: 8 },
   className: { ...Typography.subtitle2, marginBottom: 2 },
   classDesc: {
     ...Typography.caption,
     textAlign: 'center',
-    color: Colors.text.light.tertiary,
     marginBottom: 4,
   },
   classBonus: {
     ...Typography.caption,
-    color: Colors.success[700],
     marginBottom: 4,
   },
   selectedText: {
-    color: Colors.primary[600],
     fontWeight: 'bold',
     marginTop: 4,
   },

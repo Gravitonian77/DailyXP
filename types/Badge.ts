@@ -3,9 +3,9 @@ export interface Badge {
   name: string;
   description: string;
   icon: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  category: 'achievement' | 'event' | 'special';
-  unlockedAt?: string;
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  category?: 'achievement' | 'event' | 'special';
+  unlockedAt?: Date | null;
   attributes?: {
     strength?: number;
     intelligence?: number;
@@ -14,4 +14,5 @@ export interface Badge {
     wisdom?: number;
     vitality?: number;
   };
+  condition?: (user: any) => boolean;
 } 
