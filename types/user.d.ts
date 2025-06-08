@@ -28,7 +28,8 @@ export interface Badge {
 export interface EquipmentItem {
   id: string;
   name: string;
-  slot: 'head' | 'body' | 'hands' | 'feet';
+  // Equipment slot this item occupies
+  slot: 'head' | 'chest' | 'hands' | 'legs' | 'feet' | 'weapon' | 'accessory';
   icon: string;
   description: string;
   bonus?: {
