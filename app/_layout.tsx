@@ -91,12 +91,12 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ThemeProvider>
-            <UserProvider>
-              <NotificationProvider>
+            <NotificationProvider>
+              <UserProvider>
                 <RootLayoutNav />
                 <StatusBar style="auto" />
-              </NotificationProvider>
-            </UserProvider>
+              </UserProvider>
+            </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>
