@@ -23,6 +23,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Platform, StyleSheet } from 'react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { NotificationPreferencesProvider } from '@/contexts/NotificationPreferencesContext';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -92,10 +93,12 @@ export default function RootLayout() {
         <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <UserProvider>
-                <RootLayoutNav />
-                <StatusBar style="auto" />
-              </UserProvider>
+              <NotificationPreferencesProvider>
+                <UserProvider>
+                  <RootLayoutNav />
+                  <StatusBar style="auto" />
+                </UserProvider>
+              </NotificationPreferencesProvider>
             </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>

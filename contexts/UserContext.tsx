@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { Achievement, Badge, EquipmentItem, UserClass } from '@/types/user';
 import { ACHIEVEMENTS, BADGES, EQUIPMENT } from '@/constants/achievements';
 import { useNotification } from '@/contexts/NotificationContext';
+import * as Notifications from 'expo-notifications';
+import { useNotificationPreferences } from '@/contexts/NotificationPreferencesContext';
 
 interface User {
   name: string;
@@ -114,6 +116,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User>(initialUser);
+  const {
+    notificationsEnabled,
+    streakAlerts,
+    achievementAlerts,
+  } = useNotificationPreferences();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -191,6 +198,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         } else if (lastActiveDate < yesterdayStr) {
           // Reset streak
           newUser.streakDays = 1;
+          if (notificationsEnabled && streakAlerts) {
+            Notifications.scheduleNotificationAsync({
+              content: {
+                title: 'Streak lost',
+                body: 'You missed a day and your streak was reset.',
+              },
+              trigger: null,
+            });
+          }
         }
 
         newUser.lastActive = today;
@@ -254,9 +270,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       const { newBadges } = evaluateBadges(updatedUser);
       if (newBadges.length) {
         updatedUser.badges = [...(prevUser.badges || []), ...newBadges];
-        newBadges.forEach((b) =>
-          showNotification(`New Badge Unlocked: ${b.name}!`, 'success')
-        );
+        newBadges.forEach((b) => {
+          showNotification(`New Badge Unlocked: ${b.name}!`, 'success');
+          if (notificationsEnabled && achievementAlerts) {
+            Notifications.scheduleNotificationAsync({
+              content: { title: 'Achievement Unlocked', body: b.name },
+              trigger: null,
+            });
+          }
+        });
       }
 
       return updatedUser;
@@ -270,9 +292,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       const { newBadges } = evaluateBadges(updatedUser);
       if (newBadges.length) {
         updatedUser.badges = [...(prevUser.badges || []), ...newBadges];
-        newBadges.forEach((b) =>
-          showNotification(`New Badge Unlocked: ${b.name}!`, 'success')
-        );
+        newBadges.forEach((b) => {
+          showNotification(`New Badge Unlocked: ${b.name}!`, 'success');
+          if (notificationsEnabled && achievementAlerts) {
+            Notifications.scheduleNotificationAsync({
+              content: { title: 'Achievement Unlocked', body: b.name },
+              trigger: null,
+            });
+          }
+        });
       }
 
       return updatedUser;
