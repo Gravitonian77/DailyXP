@@ -443,11 +443,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xl,
   },
   headerContent: {
     flexDirection: 'column',
+    alignItems: 'center',
     gap: Platform.OS === 'web' ? 16 : 8,
   },
   headerTitle: {
@@ -473,6 +474,7 @@ const styles = StyleSheet.create({
   },
   timeRangeContainer: {
     flexDirection: 'row',
+    marginTop: Spacing.lg,
     marginBottom: Platform.OS === 'web' ? Spacing.lg : Spacing.md,
     gap: Platform.OS === 'web' ? 16 : 8,
   },
@@ -512,8 +514,7 @@ const styles = StyleSheet.create({
   attributeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'center',
     gap: Platform.OS === 'web' ? 24 : 12,
   },
   attributeCard: {
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(124, 58, 237, 0.06)',
     borderRadius: BorderRadius.md,
     padding: 12,
-    minWidth: 90,
-    marginBottom: 8,
+    flexBasis: '30%',
+    marginBottom: 12,
   },
 });
