@@ -34,11 +34,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    minWidth: 160,
-    padding: Platform.OS === 'web' ? Spacing.lg : Spacing.md,
+    flexBasis: '48%',
+    flexGrow: 1,
+    padding: Spacing.lg,
     borderRadius: BorderRadius.md,
-    marginHorizontal: Platform.OS === 'web' ? 8 : 4,
-    marginBottom: Platform.OS === 'web' ? 0 : Spacing.md,
+    marginBottom: Spacing.md,
   },
   header: {
     flexDirection: 'row',
