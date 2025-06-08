@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Platform,
   Switch,
   Linking,
 } from 'react-native';
@@ -17,16 +16,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNotificationPreferences } from '@/contexts/NotificationPreferencesContext';
 import Constants from 'expo-constants';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
 export default function SettingsScreen() {
   const { isDark } = useTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [dailyReminders, setDailyReminders] = useState(false);
-  const [streakAlerts, setStreakAlerts] = useState(false);
-  const [achievementAlerts, setAchievementAlerts] = useState(false);
+  const {
+    notificationsEnabled,
+    dailyReminders,
+    streakAlerts,
+    achievementAlerts,
+    reminderTime,
+    setNotificationsEnabled,
+    setDailyReminders,
+    setStreakAlerts,
+    setAchievementAlerts,
+    setReminderTime,
+  } = useNotificationPreferences();
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const renderSettingItem = (
     icon: React.ReactNode,
@@ -176,6 +186,40 @@ export default function SettingsScreen() {
                 'Get reminded to complete your daily tasks',
                 dailyReminders,
                 setDailyReminders
+              )}
+              {dailyReminders && (
+                <TouchableOpacity
+                  onPress={() => setShowTimePicker(true)}
+                  style={[
+                    styles.settingItem,
+                    { backgroundColor: isDark ? Colors.neutral[900] : Colors.neutral[50] },
+                  ]}
+                >
+                  <View style={styles.settingIcon} />
+                  <View style={styles.settingContent}>
+                    <Text
+                      style={[
+                        Typography.subtitle1,
+                        {
+                          color: isDark ? Colors.text.dark.primary : Colors.text.light.primary,
+                          marginBottom: 4,
+                        },
+                      ]}
+                    >
+                      Reminder Time
+                    </Text>
+                    <Text
+                      style={[
+                        Typography.caption,
+                        {
+                          color: isDark ? Colors.text.dark.tertiary : Colors.text.light.tertiary,
+                        },
+                      ]}
+                    >
+                      {reminderTime}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               )}
 
               {renderSettingItem(
@@ -394,6 +438,20 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+      {showTimePicker && (
+        <DateTimePicker
+          mode="time"
+          value={new Date(`1970-01-01T${reminderTime}:00`)}
+          onChange={(_, date) => {
+            setShowTimePicker(false);
+            if (date) {
+              const h = date.getHours().toString().padStart(2, '0');
+              const m = date.getMinutes().toString().padStart(2, '0');
+              setReminderTime(`${h}:${m}`);
+            }
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
