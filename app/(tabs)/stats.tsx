@@ -77,8 +77,38 @@ export default function StatsScreen() {
 
   // Calculate XP gained in the selected time range
   const getXpForPeriod = () => {
-    // For demo purposes, using a random value based on level
-    return user.level * 100 + Math.floor(Math.random() * 200);
+    const now = new Date();
+    const startDate = new Date();
+
+    switch (timeRange) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    const taskXP = tasks
+      .filter(
+        (task) =>
+          task.completed &&
+          task.completedDate &&
+          new Date(task.completedDate) >= startDate
+      )
+      .reduce((sum, task) => sum + (task.xpValue || 0), 0);
+
+    const questXP = quests
+      .filter(
+        (quest) =>
+          quest.completed && quest.endDate && new Date(quest.endDate) >= startDate
+      )
+      .reduce((sum, quest) => sum + (quest.xpReward || 0), 0);
+
+    return taskXP + questXP;
   };
 
   // Calculate time to next level
