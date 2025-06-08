@@ -125,86 +125,6 @@ export const BADGES: Badge[] = [
     unlockedAt: new Date(),
     condition: (user) => checkUnstoppable(user),
   } as any,
-  {
-    id: 'first_blood',
-    name: 'First Steps',
-    description: 'Complete your first task',
-    icon: '🩸',
-    unlockedAt: null,
-    condition: (user) => user.totalTasksCompleted >= 1,
-  },
-  {
-    id: 'weekly_warrior',
-    name: 'Weekly Warrior',
-    description: 'Maintain a 7-day streak',
-    icon: '🏆',
-    unlockedAt: null,
-    condition: (user) => user.streakDays >= 7,
-  },
-  {
-    id: 'xp_grinder',
-    name: 'XP Grinder',
-    description: 'Reach level 10',
-    icon: '💎',
-    unlockedAt: null,
-    condition: (user) => user.level >= 10,
-  },
-  {
-    id: 'mind_master',
-    name: 'Mind Master',
-    description: 'Reach 15 Intelligence',
-    icon: '🧠',
-    unlockedAt: null,
-    condition: (user) => user.attributes.intelligence >= 15,
-  },
-  {
-    id: 'iron_body',
-    name: 'Iron Body',
-    description: 'Reach 20 Strength',
-    icon: '💪',
-    unlockedAt: null,
-    condition: (user) => user.attributes.strength >= 20,
-  },
-  {
-    id: 'ritual_keeper',
-    name: 'Ritual Keeper',
-    description: 'Complete at least 1 task every day for 30 days',
-    icon: '📅',
-    unlockedAt: null,
-    condition: (user) => user.streakDays >= 30,
-  },
-  {
-    id: 'jack_of_all',
-    name: 'Jack of All Trades',
-    description: 'Reach 10 in all attributes',
-    icon: '🃏',
-    unlockedAt: null,
-    condition: (user) => Object.values(user.attributes).every(val => val >= 10),
-  },
-  {
-    id: 'no_rest',
-    name: 'No Rest for the Focused',
-    description: 'Complete 100 tasks',
-    icon: '🔥',
-    unlockedAt: null,
-    condition: (user) => user.totalTasksCompleted >= 100,
-  },
-  {
-    id: 'quest_clearer',
-    name: 'Quest Clearer',
-    description: 'Finish 10 quests',
-    icon: '🎯',
-    unlockedAt: null,
-    condition: (user) => user.completedQuests && user.completedQuests.length >= 10,
-  },
-  {
-    id: 'zen_mode',
-    name: 'Zen Mode',
-    description: 'Meditate 7 days in a row',
-    icon: '🧘',
-    unlockedAt: null,
-    condition: (user) => checkMeditationStreak(user, 7),
-  },
 ];
 
 export const EQUIPMENT: EquipmentItem[] = [
@@ -260,9 +180,87 @@ export const EQUIPMENT: EquipmentItem[] = [
   } as any,
 ];
 
-// Helper functions (to be implemented in your codebase)
-function checkMeditationStreak(user: any, days: number) { return false; }
-function checkNightRunner(user: any) { return false; }
-function checkUnstoppable(user: any) { return false; }
-function checkTasksPerDay(user: any, min: number) { return false; }
-function checkEarlyBird(user: any) { return false; } 
+// Helper functions
+function checkMeditationStreak(user: any, days: number): boolean {
+  if (!Array.isArray(user.meditationHistory)) return false;
+
+  const dates = user.meditationHistory
+    .map((d: any) => new Date(d))
+    .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+
+  let streak = 1;
+  for (let i = dates.length - 1; i > 0 && streak < days; i--) {
+    const diff = dates[i].getTime() - dates[i - 1].getTime();
+    if (diff <= 86400000 + 1000 && diff >= 0) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+  return streak >= days;
+}
+
+function checkNightRunner(user: any): boolean {
+  const history = Array.isArray(user.taskHistory) ? user.taskHistory : [];
+  const nights = new Set<string>();
+
+  history.forEach((t: any) => {
+    if (!t.completedDate) return;
+    const date = new Date(t.completedDate);
+    if (date.getHours() >= 22) {
+      nights.add(date.toISOString().split('T')[0]);
+    }
+  });
+
+  return nights.size >= 5;
+}
+
+function checkUnstoppable(user: any): boolean {
+  const history = Array.isArray(user.taskHistory) ? user.taskHistory : [];
+  const counts: Record<string, number> = {};
+
+  history.forEach((t: any) => {
+    if (!t.completedDate) return;
+    const day = new Date(t.completedDate).toISOString().split('T')[0];
+    counts[day] = (counts[day] || 0) + 1;
+  });
+
+  const sortedDays = Object.keys(counts).sort();
+  let streak = 0;
+
+  for (let i = 0; i < sortedDays.length; i++) {
+    const day = sortedDays[i];
+    const prevDay = i > 0 ? new Date(sortedDays[i - 1]) : null;
+    const currDay = new Date(day);
+
+    if (counts[day] >= 5 && (!prevDay || currDay.getTime() - prevDay.getTime() === 86400000)) {
+      streak += 1;
+      if (streak >= 7) return true;
+    } else {
+      streak = counts[day] >= 5 ? 1 : 0;
+    }
+  }
+
+  return false;
+}
+
+function checkTasksPerDay(user: any, min: number): boolean {
+  const history = Array.isArray(user.taskHistory) ? user.taskHistory : [];
+  const today = new Date().toISOString().split('T')[0];
+
+  const count = history.filter((t: any) => {
+    if (!t.completedDate) return false;
+    return t.completedDate.startsWith(today);
+  }).length;
+
+  return count >= min;
+}
+
+function checkEarlyBird(user: any): boolean {
+  const history = Array.isArray(user.taskHistory) ? user.taskHistory : [];
+  return history.some((t: any) => {
+    if (!t.completedDate) return false;
+    const d = new Date(t.completedDate);
+    return d.getHours() < 8;
+  });
+}
