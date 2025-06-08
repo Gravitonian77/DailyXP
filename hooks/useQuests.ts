@@ -3,6 +3,7 @@ import { Quest, NewQuestInput, QuestStep } from '@/types/Quest';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import uuid from 'react-native-uuid';
+import { supabase } from '@/lib/supabase';
 
 // Web localStorage implementation
 const secureStoreWeb = {
@@ -119,21 +120,43 @@ export const useQuests = () => {
   useEffect(() => {
     const loadQuests = async () => {
       try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .from('quests')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (!error && data) {
+            setQuests(data as Quest[]);
+            await secureStore.setItem('dailyxp_quests', JSON.stringify(data));
+            return;
+          }
+        }
+
         const questsData = await secureStore.getItem('dailyxp_quests');
         if (questsData) {
           setQuests(JSON.parse(questsData));
         } else {
-          // First time, set sample quests
           setQuests(sampleQuests);
           await secureStore.setItem('dailyxp_quests', JSON.stringify(sampleQuests));
         }
       } catch (error) {
         console.error('Failed to load quests:', error);
+        const questsData = await secureStore.getItem('dailyxp_quests');
+        if (questsData) {
+          setQuests(JSON.parse(questsData));
+        } else {
+          setQuests(sampleQuests);
+        }
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadQuests();
   }, []);
   
@@ -197,42 +220,91 @@ export const useQuests = () => {
     };
     
     setQuests((prevQuests) => [...prevQuests, newQuest]);
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('quests')
+            .insert({ ...newQuest, user_id: user.id });
+        }
+      } catch (error) {
+        console.error('Failed to save quest to Supabase:', error);
+      }
+    })();
+
     return newQuest;
   };
   
   // Update a quest
   const updateQuest = (questId: string, updates: Partial<Quest>) => {
-    setQuests((prevQuests) => 
-      prevQuests.map((quest) => 
-        quest.id === questId ? { ...quest, ...updates } : quest
-      )
+    let updatedQuest: Quest | null = null;
+    setQuests((prevQuests) =>
+      prevQuests.map((quest) => {
+        if (quest.id === questId) {
+          updatedQuest = { ...quest, ...updates };
+          return updatedQuest;
+        }
+        return quest;
+      })
     );
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user && updatedQuest) {
+          await supabase
+            .from('quests')
+            .update(updatedQuest)
+            .eq('id', questId)
+            .eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.error('Failed to update quest in Supabase:', error);
+      }
+    })();
   };
   
   // Delete a quest
   const deleteQuest = (questId: string) => {
     setQuests((prevQuests) => prevQuests.filter((quest) => quest.id !== questId));
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('quests').delete().eq('id', questId).eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.error('Failed to delete quest from Supabase:', error);
+      }
+    })();
   };
   
   // Complete a quest step
   const completeQuestStep = (questId: string, stepId: string) => {
-    setQuests((prevQuests) => 
+    let updatedQuest: Quest | null = null;
+    setQuests((prevQuests) =>
       prevQuests.map((quest) => {
         if (quest.id === questId) {
-          // Update the step to completed
-          const updatedSteps = quest.steps.map((step) => 
+          const updatedSteps = quest.steps.map((step) =>
             step.id === stepId ? { ...step, completed: true } : step
           );
-          
-          // Calculate new progress
+
           const completedSteps = updatedSteps.filter((step) => step.completed).length;
           const totalSteps = updatedSteps.length;
           const progress = Math.round((completedSteps / totalSteps) * 100);
-          
-          // Check if all steps are completed
+
           const allStepsCompleted = completedSteps === totalSteps;
-          
-          return {
+
+          updatedQuest = {
             ...quest,
             steps: updatedSteps,
             progress,
@@ -240,10 +312,28 @@ export const useQuests = () => {
             status: allStepsCompleted ? 'completed' : quest.status,
             endDate: allStepsCompleted ? new Date().toISOString() : quest.endDate,
           };
+          return updatedQuest;
         }
         return quest;
       })
     );
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user && updatedQuest) {
+          await supabase
+            .from('quests')
+            .update(updatedQuest)
+            .eq('id', questId)
+            .eq('user_id', user.id);
+        }
+      } catch (error) {
+        console.error('Failed to update quest step in Supabase:', error);
+      }
+    })();
   };
   
   // Get a specific quest by ID
